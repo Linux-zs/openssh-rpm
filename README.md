@@ -62,7 +62,7 @@
   ```bash
   rpm -e openssh
   yum install -y openssh openssh-server
-```
+  ```
 
 ## 免责声明
 此软件包按原样提供，作者不承担任何直接或间接使用造成的风险。在生产环境部署前，请在测试环境中充分验证。
