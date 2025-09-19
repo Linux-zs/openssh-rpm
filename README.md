@@ -1,21 +1,20 @@
 # openssh-rpm
 
-本仓库用于管理 **OpenSSH 打包成 RPM 的 spec 文件**，以及在 Release 中发布打包好的 RPM 包。
+提供经过修改的 OpenSSH spec 文件，用于构建自包含静态 OpenSSL 库的 RPM 包。此包不依赖系统自带的 OpenSSL 共享库，提高安全性和部署便利性。
 
 ## 📦 仓库内容
 - `openssh.spec`  
-  spec 文件基于 OpenSSH 官方自带的 spec 修改而来，主要改动包括：
-  - **内置静态 OpenSSL**：打包时会编译并静态链接 OpenSSL，不依赖系统本地的 OpenSSL 库。
-  - **新增 ssh-copy-id**：方便用户快速分发公钥。
-- **Releases**  
-  提供不同版本的 OpenSSH RPM 包，用户可直接下载使用。
+  1. 静态链接 OpenSSL 3.5.3（%global static_libcrypto 1 + 内联编译 openssl-3.5.3.tar.gz），不依赖系统 libcrypto.so
+  2. 默认启用 ssh-copy-id 及其 man 页面
+  3. 去掉 strip 方便调试；关闭 debuginfo 减少体积
+  4. 其余逻辑（PAM、systemd、x11-askpass、gnome-askpass、Kerberos5）保持与官方一致，可直接替换 CentOS 7/8/9、RHEL 7/8/9 自带包。
 
 ## 🔧 自行打包方法
 如果你希望自己打包 RPM，可以按照以下步骤操作：
 
 1. 安装必要工具：
    ```bash
-   yum install rpm-build rpmdevtools spectool -y
+   yum install rpm-build rpmdevtools spectool  gcc make perl pam-devel krb5-devel imake gtk2-devel -y
    ```
 2. 初始化打包目录、下载源码包、：
    ```bash
@@ -33,12 +32,12 @@
   ```bash
   ~/rpmbuild/RPMS/
 ```
-⚠️ 注意事项
-升级前请务必备份关键配置文件，例如：
-
-/etc/ssh/sshd_config
-/etc/ssh/ssh_config
-/etc/pam.d/sshd
+⚠️ **升级建议必备份以下文件**  
+> `/etc/ssh/sshd_config`  
+> `/etc/ssh/ssh_config`  
+> `/etc/pam.d/sshd`  
+> 以及所有 `/etc/ssh/ssh_host_*key` 私钥文件
+升级通常会尝试覆盖这些配置，比如默认不允许root登录等。
 
 ## 🚀 安装 / 升级流程
 
@@ -46,11 +45,12 @@
 2. 安装或升级：
    ```bash
    # 安装
-   rpm -ivh openssh-<version>.rpm
+   rpm -ivh openssh-<version>.rpm openssh-server-<version>.rpm openssh-client-<version>.rpm 
 
    # 升级
-   rpm -Uvh openssh-<version>.rpm
+   rpm -Uvh openssh-<version>.rpm openssh-server-<version>.rpm openssh-client-<version>.rpm
    ```
+   
 ## ❓ 常见问题（FAQ）
 
 ### 1. 为什么要静态链接 OpenSSL？
@@ -63,3 +63,6 @@
   rpm -e openssh
   yum install -y openssh openssh-server
 ```
+
+## 免责声明
+此软件包按原样提供，作者不承担任何直接或间接使用造成的风险。在生产环境部署前，请在测试环境中充分验证。
