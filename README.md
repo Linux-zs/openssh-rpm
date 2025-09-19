@@ -16,7 +16,7 @@
    ```bash
    git clone https://github.com/Linux-zs/openssh-rpm.git
    ```
-2. 安装必要工具：
+1. 安装必要工具：
    ```bash
    yum groups install "Development Tools"
    yum install rpm-build rpmdevtools libXt-devel gcc make perl pam-devel krb5-devel gtk2-devel imake -y
@@ -27,27 +27,27 @@
    ```bash
    yum install -y https://www.rpmfind.net/linux/almalinux/8.10/PowerTools/x86_64/os/Packages/imake-1.0.7-11.el8.x86_64.rpm
    ```
-4. 初始化打包目录：
+2. 初始化打包目录：
    ```bash
    rpmdev-setuptree
    #初始化完成后把openssh.spec文件放到rpmbuild/SPECS/目录下
    cp openssh-rpm/openssh.spec rpmbuild/SPECS/
    ```
-5. 下载源码包（根据 openssh.spec 中的定义）：
-  ```bash
-  cd rpmbuild/SPECS/
-  spectool -g -R openssh.spec
-```
+3. 下载源码包（根据 openssh.spec 中的定义）：
+   ```bash
+   cd rpmbuild/SPECS/
+   spectool -g -R openssh.spec
+   ```
 4. 开始打包：
-  ```bash
-  rpmbuild -ba --nodebuginfo openssh.spec
-  #el7不支持--nodebuginfo
-  rpmbuild -ba openssh.spec
-```
+   ```bash
+   rpmbuild -ba --nodebuginfo openssh.spec
+   #el7不支持--nodebuginfo
+   rpmbuild -ba openssh.spec
+   ```
 5. 打包完成后，生成的 RPM 包会出现在：
-  ```bash
-  ~/rpmbuild/RPMS/
-```
+   ```bash
+   ~/rpmbuild/RPMS/
+   ```
 ⚠️ **升级建议必备份以下文件**  
 > `/etc/ssh/sshd_config`  
 > `/etc/ssh/ssh_config`  
@@ -66,11 +66,11 @@
    ```bash
    systemctl restart sshd
    ```
-  如果你的配置文件修改过，升级后会新生成.rpmnew后缀的文件，如果没有修改过，升级会覆盖原本的配置文件
+   如果你的配置文件修改过，升级后会新生成.rpmnew后缀的文件，如果没有修改过，升级会覆盖原本的配置文件
 4. 验证
-  ```bash
-  ssh -V
-  ```
+   ```bash
+   ssh -V
+   ```
 ## ❓ 常见问题（FAQ）
 
 ### 1. 为什么要静态链接 OpenSSL？
@@ -79,10 +79,10 @@
 
 ### 2. 如何回退到系统自带的 OpenSSH？
 - 如果需要回退，可以先卸载本项目的 RPM 包：
-  ```bash
-  yum remove openssh openssh-server openssh-clients
-  yum install -y openssh openssh-server openssh-clients
-  ```
+   ```bash
+   yum remove openssh openssh-server openssh-clients
+   yum install -y openssh openssh-server openssh-clients
+   ```
 
 ## 免责声明
 此软件包按原样提供，作者不承担任何直接或间接使用造成的风险。在生产环境部署前，请在测试环境中充分验证。
