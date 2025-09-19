@@ -4,7 +4,7 @@
 
 ## 📦 仓库内容
 - `openssh.spec`  
-  唯一的 spec 文件，基于 OpenSSH 官方自带的 spec 修改而来，主要改动包括：
+  spec 文件基于 OpenSSH 官方自带的 spec 修改而来，主要改动包括：
   - **内置静态 OpenSSL**：打包时会编译并静态链接 OpenSSL，不依赖系统本地的 OpenSSL 库。
   - **新增 ssh-copy-id**：方便用户快速分发公钥。
 - **Releases**  
