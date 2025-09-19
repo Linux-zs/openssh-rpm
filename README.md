@@ -12,21 +12,37 @@
 ## 🔧 自行打包方法
 如果你希望自己打包 RPM，可以按照以下步骤操作：
 
-1. 安装必要工具：
+0. 克隆仓库：
    ```bash
-   yum install rpm-build rpmdevtools spectool  gcc make perl pam-devel krb5-devel imake gtk2-devel -y
+   git clone https://github.com/Linux-zs/openssh-rpm.git
    ```
-2. 初始化打包目录、下载源码包、：
+2. 安装必要工具：
+   ```bash
+   yum groups install "Development Tools"
+   yum install rpm-build rpmdevtools libXt-devel gcc make perl pam-devel krb5-devel gtk2-devel imake -y
+   #el7需要额外安装
+   yum install perl-IPC-Cmd perl-Time-Piece -y
+   ```
+   el8仓库如果没有imake的包，用下面链接安装：
+   ```bash
+   yum install -y https://www.rpmfind.net/linux/almalinux/8.10/PowerTools/x86_64/os/Packages/imake-1.0.7-11.el8.x86_64.rpm
+   ```
+4. 初始化打包目录：
    ```bash
    rpmdev-setuptree
+   #初始化完成后把openssh.spec文件放到rpmbuild/SPECS/目录下
+   cp openssh-rpm/openssh.spec rpmbuild/SPECS/
    ```
-3. 下载源码包（根据 openssh.spec 中的定义）：
+5. 下载源码包（根据 openssh.spec 中的定义）：
   ```bash
+  cd rpmbuild/SPECS/
   spectool -g -R openssh.spec
 ```
 4. 开始打包：
   ```bash
   rpmbuild -ba --nodebuginfo openssh.spec
+  #el7不支持--nodebuginfo
+  rpmbuild -ba openssh.spec
 ```
 5. 打包完成后，生成的 RPM 包会出现在：
   ```bash
@@ -44,13 +60,17 @@
 1. 下载已构建好的 RPM 包（或使用你自己打包生成的 RPM）。
 2. 安装或升级：
    ```bash
-   # 安装
-   rpm -ivh openssh-<version>.rpm openssh-server-<version>.rpm openssh-client-<version>.rpm 
-
-   # 升级
-   rpm -Uvh openssh-<version>.rpm openssh-server-<version>.rpm openssh-client-<version>.rpm
+   yun localinstall openssh-<version>.rpm openssh-server-<version>.rpm openssh-client-<version>.rpm
    ```
-   
+3. 重启sshd服务
+   ```bash
+   systemctl restart sshd
+   ```
+  如果你的配置文件修改过，升级后会新生成.rpmnew后缀的文件，如果没有修改过，升级会覆盖原本的配置文件
+4. 验证
+  ```bash
+  ssh -V
+  ```
 ## ❓ 常见问题（FAQ）
 
 ### 1. 为什么要静态链接 OpenSSL？
@@ -60,8 +80,8 @@
 ### 2. 如何回退到系统自带的 OpenSSH？
 - 如果需要回退，可以先卸载本项目的 RPM 包：
   ```bash
-  rpm -e openssh
-  yum install -y openssh openssh-server
+  yum remove openssh openssh-server openssh-clients
+  yum install -y openssh openssh-server openssh-clients
   ```
 
 ## 免责声明
