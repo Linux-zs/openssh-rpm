@@ -1,6 +1,6 @@
 %global static_libcrypto 1
 %global without_openssl 1
-%global ver 9.8p1
+%global ver 10.0p1
 %global rel 1%{?dist}
 
 # OpenSSH privilege separation requires a user & group ID
@@ -25,20 +25,12 @@
 # Use GTK2 instead of GNOME in gnome-ssh-askpass
 %global gtk2 1
 
-# Use build6x options for older RHEL builds
-# RHEL 7 not yet supported
-%if 0%{?rhel} > 6
-%global build6x 0
-%else
-%global build6x 1
-%endif
-
 %global without_openssl 0
 # build without openssl where 1.1.1 is not available
-%if 0%{?fedora} <= 28
+%if %{defined fedora} && 0%{?fedora} <= 28
 %global without_openssl 1
 %endif
-%if 0%{?rhel} <= 7
+%if %{defined rhel} && 0%{?rhel} <= 7
 %global without_openssl 1
 %endif
 
@@ -54,14 +46,6 @@
 # RedHat <= 7.2 and Red Hat Advanced Server 2.1 are examples.
 # rpm -ba|--rebuild --define 'no_gtk2 1'
 %{?no_gtk2:%global gtk2 0}
-
-# Is this a build for RHL 6.x or earlier?
-%{?build_6x:%global build6x 1}
-
-# If this is RHL 6.x, the default configuration has sysconfdir in /usr/etc.
-%if %{build6x}
-%global _sysconfdir /etc
-%endif
 
 # Options for static OpenSSL link:
 # rpm -ba|--rebuild --define "static_openssl 1"
@@ -89,28 +73,17 @@ Release: %{rel}rescue
 Release: %{rel}
 %endif
 URL: https://www.openssh.com/portable.html
-Source0: https://cloudflare.cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-9.8p1.tar.gz
+Source0: https://cloudflare.cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-10.0p2.tar.gz
 Source1: https://github.com/sigmavirus24/x11-ssh-askpass/archive/refs/tags/1.2.4.1.tar.gz
 Source2: https://github.com/openssl/openssl/releases/download/openssl-3.5.3/openssl-3.5.3.tar.gz
 License: BSD
 Group: Applications/Internet
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 Obsoletes: ssh
-%if %{build6x}
-PreReq: initscripts >= 5.00
-%else
 Requires: initscripts >= 5.20
-%endif
 BuildRequires: perl
-#%if ! %{without_openssl}
-#BuildRequires: openssl-devel >= 1.1.1
-#%endif
 BuildRequires: /bin/login
-%if ! %{build6x}
 BuildRequires: glibc-devel, pam
-%else
-BuildRequires: /usr/include/security/pam_appl.h
-%endif
 %if ! %{no_x11_askpass}
 BuildRequires: /usr/include/X11/Xlib.h
 # Xt development tools
@@ -139,9 +112,7 @@ Summary: The OpenSSH server daemon.
 Group: System Environment/Daemons
 Obsoletes: ssh-server
 Requires: openssh = %{version}-%{release}, chkconfig >= 0.9
-%if ! %{build6x}
 Requires: /etc/pam.d/system-auth
-%endif
 
 %package askpass
 Summary: A passphrase dialog for OpenSSH and X.
@@ -201,8 +172,8 @@ environment.
 %else
 %setup -q
 %endif
-
 tar -xzf %{SOURCE2} -C ..
+
 
 %build
 %if %{rescue}
@@ -214,6 +185,7 @@ pushd ../openssl-3.5.3
 make -j$(nproc)
 make install_sw
 popd
+
 
 
 unset CFLAGS LDFLAGS LIBS CPPFLAGS
@@ -232,22 +204,25 @@ export LIBS="/root/rpmbuild/BUILD/openssl-3.5.3/libcrypto.a \
 	--mandir=%{_mandir} \
 	--with-mantype=man \
 	--disable-strip \
-        --with-ssl-dir=/root/rpmbuild/BUILD/openssl-3.5.3 \
-        --with-ssl-engine \
-	--without-openssl-header-check \
+	--with-ssl-dir=/root/rpmbuild/BUILD/openssl-3.5.3 \
+	--with-ssl-engine \
+  --without-openssl-header-check \
 %if %{scard}
 	--with-smartcard \
 %endif
-%if ! %{rescue}
-        --with-pam \
+%if %{rescue}
+	--without-pam \
 %else
-        --without-pam \
+	--with-pam \
 %endif
 %if %{kerberos5}
-        --with-kerberos5=$K5DIR \
+	 --with-kerberos5=$K5DIR \
 %endif
 
-#perl -pi -e "s|-lcrypto|%{_libdir}/libcrypto.a|g" Makefile
+
+#%if %{static_libcrypto}
+##perl -pi -e "s|-lcrypto|%{_libdir}/libcrypto.a|g" Makefile
+#%endif
 
 make
 
@@ -375,6 +350,7 @@ fi
 %if ! %{rescue}
 %attr(0755,root,root) %{_bindir}/ssh-keygen
 %attr(0755,root,root) %{_bindir}/ssh-copy-id
+%attr(0755,root,root) %{_libexecdir}/openssh/sshd-auth
 %attr(0644,root,root) %{_mandir}/man1/ssh-copy-id.1*
 %attr(0644,root,root) %{_mandir}/man1/ssh-keygen.1*
 %attr(0755,root,root) %dir %{_libexecdir}/openssh
@@ -446,6 +422,8 @@ fi
 - Remove reference of dropped sshd.pam.old file
 - Update openssl-devel dependency to require >= 1.1.1
 - Build with --without-openssl elsewhere
+- Remove ancient build6x config, intended for RHL 6.x
+  (the distro predating Fedora, not RHEL)
 
 * Thu Oct 28 2021 Damien Miller <djm@mindrot.org>
 - Remove remaining traces of --with-md5-passwords
