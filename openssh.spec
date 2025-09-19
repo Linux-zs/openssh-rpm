@@ -79,7 +79,7 @@ Source2: https://github.com/openssl/openssl/releases/download/openssl-3.5.3/open
 License: BSD
 Group: Applications/Internet
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
-Obsoletes: ssh
+Obsoletes: ssh < %{version}
 Requires: initscripts >= 5.20
 BuildRequires: perl
 BuildRequires: /bin/login
@@ -105,12 +105,12 @@ BuildRequires: krb5-libs
 Summary: OpenSSH clients.
 Requires: openssh = %{version}-%{release}
 Group: Applications/Internet
-Obsoletes: ssh-clients
+Obsoletes: ssh-clients < %{version}
 
 %package server
 Summary: The OpenSSH server daemon.
 Group: System Environment/Daemons
-Obsoletes: ssh-server
+Obsoletes: ssh-server < %{version}
 Requires: openssh = %{version}-%{release}, chkconfig >= 0.9
 Requires: /etc/pam.d/system-auth
 
@@ -118,13 +118,13 @@ Requires: /etc/pam.d/system-auth
 Summary: A passphrase dialog for OpenSSH and X.
 Group: Applications/Internet
 Requires: openssh = %{version}-%{release}
-Obsoletes: ssh-extras
+Obsoletes: ssh-extras < %{version}
 
 %package askpass-gnome
 Summary: A passphrase dialog for OpenSSH, X, and GNOME.
 Group: Applications/Internet
 Requires: openssh = %{version}-%{release}
-Obsoletes: ssh-extras
+Obsoletes: ssh-extras < %{version}
 
 %description
 SSH (Secure SHell) is a program for logging into and executing
